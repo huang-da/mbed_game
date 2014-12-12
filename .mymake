@@ -1,0 +1,65 @@
+#Configuration for mymake
+#Lines beginning with a # are treated as comments.
+#Lines containing errors are ignored.
+#Lines starting with win. or unix. will only be considered during windows and unix compilation.
+
+#These are the general settings, which can be overriden in a local .mymake-file
+#or as command-line arguments to the executable in some cases.
+
+#The file-types of the implementation files. Used to match header-files to implementation-files.
+ext=cpp
+ext=cc
+ext=cxx
+ext=c++
+ext=c
+ext=s
+
+#The extension for executable files on the system.
+executableExt=bin
+
+#The extension for intermediate files on the system.
+intermediate=o
+
+#Ignore specific files (wildcards supported).
+#ignore=*.template.*
+
+#Include paths:
+include=./mbed,./mbed/target,./mbed-rtos/rtos,./mbed-rtos/rtx
+
+#Include paths command line to compiler
+includeCl=-iquote 
+
+#Command line option to add library
+libraryCl=-l
+
+#Required libraries
+libs=mbed
+
+#Output (defaults to the name of the first input file)
+#out=<filename>
+
+#Set the output path for executable files.
+executablePath=./build
+
+#Command used to compile a single source file into a unlinked file.
+#<file> will be replaced by the input file and
+#<output> will be replaced by the outputn file
+compile=arm-none-eabi-g++ -mcpu=cortex-m3 -mthumb -c -fno-common -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -MMD -MP -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_CORTEX_M -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3 -DMBED_BUILD_TIMESTAMP=1418349159.53 -D__MBED__=1 -I./mbed/target <includes> <file> -o <output>
+compile=c:arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -c -fno-common -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -MMD -MP -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_CORTEX_M -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3 -DMBED_BUILD_TIMESTAMP=1418349159.53 -D__MBED__=1 -I./mbed/target <includes> <file> -o <output>
+compile=s:arm-none-eabi-as -mcpu=cortex-m3 -mthumb -o <output> <file>
+
+#Command to link the intermediate files into an executable.
+#<files> is the list of intermediate files and
+#<output> is the name of the final executable to be created.
+#<libs> is the list of library includes generated.
+link=arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -Wl,-Map=sound.map,--cref -T./mbed/target/LPC1768.ld -L./mbed/target <files> ./mbed/target/cmsis_nvic.o ./mbed/target/system_LPC17xx.o ./mbed/target/board.o ./mbed/target/retarget.o ./mbed/target/startup_LPC17xx.o <libs> -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys -o build/elf && ..\gcc\bin\arm-none-eabi-objcopy -O binary build/elf <output>
+
+#The directory to be used for intermediate files
+build=build\
+
+#Execute the compiled file after successful compilation?
+execute=no
+
+#Show compilation time
+showTime=no
+
