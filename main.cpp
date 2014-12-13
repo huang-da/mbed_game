@@ -1,13 +1,22 @@
 #include "std.h"
-// #include "sound.h"
+#include "sound.h"
+#include "USBHostMSD.h"
 
 DigitalOut p(LED1);
 
 int main() {
-	//Output output(LED1, 8000);
+	USBHostMSD msd("usb");
+	while (!msd.connect()) {
+		Thread::wait(500);
+	}
+
+	Output output(p18, 8000);
+	// output.add(new RawFile("/usb/sound.raw"));
+	output.add(new SquareWave());
+
 	while (true) {
 		p = !p;
-		wait(0.4);
+		Thread::wait(400);
 	}
 	return 0;
 }

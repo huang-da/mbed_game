@@ -24,7 +24,7 @@ intermediate=o
 #ignore=*.template.*
 
 #Include paths:
-include=./mbed,./mbed/target,./mbed-rtos/rtos,./mbed-rtos/rtx
+include=./mbed,./mbed/target,./mbed-rtos/rtos,./mbed-rtos/rtx,./FatFileSystem,./FatFileSystem/ChaN,./USBHost/USBHost,./USBHost/USBHostHub,./USBHost/USBHostMSD
 
 #Include paths command line to compiler
 includeCl=-iquote 
@@ -44,7 +44,7 @@ executablePath=./build
 #Command used to compile a single source file into a unlinked file.
 #<file> will be replaced by the input file and
 #<output> will be replaced by the outputn file
-compile=arm-none-eabi-g++ -mcpu=cortex-m3 -mthumb -c -fno-common -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -MMD -MP -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_CORTEX_M -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3 -DMBED_BUILD_TIMESTAMP=1418349159.53 -D__MBED__=1 -I./mbed/target <includes> <file> -o <output>
+compile=arm-none-eabi-g++ -mcpu=cortex-m3 -mthumb -c -fno-common -fno-rtti -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -MMD -MP -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_CORTEX_M -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3 -DMBED_BUILD_TIMESTAMP=1418349159.53 -D__MBED__=1 -I./mbed/target <includes> <file> -o <output>
 compile=c:arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -c -fno-common -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -fomit-frame-pointer -MMD -MP -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_CORTEX_M -DTARGET_NXP -DTARGET_LPC176X -DTARGET_MBED_LPC1768 -DTOOLCHAIN_GCC_ARM -DTOOLCHAIN_GCC -D__CORTEX_M3 -DARM_MATH_CM3 -DMBED_BUILD_TIMESTAMP=1418349159.53 -D__MBED__=1 -I./mbed/target <includes> <file> -o <output>
 compile=s:arm-none-eabi-as -mcpu=cortex-m3 -mthumb -o <output> <file>
 
