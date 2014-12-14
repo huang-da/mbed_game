@@ -34,7 +34,7 @@ bool RawFile::finished() {
 }
 
 // Size of the playback buffer.
-static const nat playbackBuffer = 1024 * 10;
+static const nat playbackBuffer = 1024 * 2;
 static const nat bufferChunks = 2;
 static const nat volume = 0x20; // 0x100 is max.
 
@@ -47,7 +47,7 @@ Output::Output(PinName pin, nat samplerate) : output(pin), samplerate(samplerate
 	createBuffer();
 	startInterrupt();
 
-	workerThread = new Thread(startWorker, this, osPriorityRealtime);
+	// workerThread = new Thread(startWorker, this, osPriorityRealtime, 256);
 }
 
 Output::~Output() {
@@ -73,8 +73,9 @@ void Output::startInterrupt() {
 
 void Output::createBuffer() {
 	bufferSize = playbackBuffer;
-	nat period = 1000 / samplerate;
-	bufferTime = bufferSize * period;
+	nat period = 1000000 / samplerate;
+	bufferTime = (bufferSize * period) / 1000;
+	printf("Buffer time: %u ms\n", bufferTime);
 	buffer = new byte[bufferSize];
 	playPos = 0;
 	for (nat i = 0; i < bufferSize; i++) {
@@ -105,23 +106,27 @@ void Output::fillThread() {
 				pos -= bufferSize;
 		}
 
-		// Thread::wait(bufferTime / 4);
-		Thread::wait(400);
+		Thread::wait(bufferTime / 4);
 	}
 }
 
 void Output::fill(byte *start, nat bytes) {
 	srcMutex.lock();
 
-	for (nat i = 0; i < src.size(); i++) {
-		Sound *s = src[i];
-		if (s->finished()) {
-			src.erase(src.begin() + i);
-			i--;
-			continue;
-		}
+	if (src.size() == 0) {
+		for (nat i = 0; i < bytes; i++)
+			start[i] = 0;
+	} else {
+		for (nat i = 0; i < src.size(); i++) {
+			Sound *s = src[i];
+			if (s->finished()) {
+				src.erase(src.begin() + i);
+				i--;
+				continue;
+			}
 
-		s->data(start, bytes);
+			s->data(start, bytes);
+		}
 	}
 
 	srcMutex.unlock();

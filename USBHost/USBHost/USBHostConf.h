@@ -26,7 +26,7 @@
 /*
 * Maximum of Hub connected to the usb host
 */
-#define MAX_HUB_NB                  2
+#define MAX_HUB_NB                  0 //2
 
 /*
 * Maximum number of ports on a USB hub
@@ -41,27 +41,27 @@
 /*
 * Enable USBHostKeyboard
 */
-#define USBHOST_KEYBOARD            1
+//#define USBHOST_KEYBOARD            1
 
 /*
 * Enable USBHostMouse
 */
-#define USBHOST_MOUSE               1
+//#define USBHOST_MOUSE               1
 
 /*
 * Enable USBHostSerial or USBHostMultiSerial (if set > 1)
 */
-#define USBHOST_SERIAL              1
+//#define USBHOST_SERIAL              1
 
 /*
 * Enable USB3Gmodule
 */
-#define USBHOST_3GMODULE            1
+//#define USBHOST_3GMODULE            1
 
 /*
 * Enable USB MIDI
 */
-#define USBHOST_MIDI                1 
+//#define USBHOST_MIDI                11
 
 /*
 * Maximum number of interfaces of a usb device
