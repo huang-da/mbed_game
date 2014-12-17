@@ -31,6 +31,13 @@ int main() {
 				cout << "Failed to set state." << endl;
 			}
 
+			COMMTIMEOUTS timeouts;
+			GetCommTimeouts(port, &timeouts);
+			timeouts.ReadIntervalTimeout = 20;
+			timeouts.ReadTotalTimeoutMultiplier = 0;
+			timeouts.ReadTotalTimeoutConstant = 50;
+			SetCommTimeouts(port, &timeouts);
+
 			SetCommBreak(port);
 			Sleep(20);
 			ClearCommBreak(port);
@@ -51,8 +58,6 @@ int main() {
 				if (read) {
 					buffer[read] = 0;
 					cout << buffer;
-				} else {
-					Sleep(100);
 				}
 			}
 

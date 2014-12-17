@@ -1,6 +1,10 @@
 #pragma once
 #include "std.h"
 
+
+/**
+ * Base class for anything providing sound.
+ */
 class Sound {
 public:
 	virtual ~Sound();
@@ -8,6 +12,9 @@ public:
 	virtual bool finished() = 0;
 };
 
+/**
+ * Generate a simple square wave.
+ */
 class SquareWave : public Sound {
 public:
 	SquareWave();
@@ -19,6 +26,9 @@ private:
 	bool pos;
 };
 
+/**
+ * Read from a .raw file (8-bit mono).
+ */
 class RawFile : public Sound {
 public:
 	RawFile(const char *name);
