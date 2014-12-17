@@ -65,7 +65,18 @@ static void interrupt() {
 		return;
 	}
 
-	unsigned short v = buffer[playPos];
+	float now = buffer[playPos];
+	float last;
+	if (playPos == 0)
+		last = buffer[bufferSize - 1];
+	else
+		last = buffer[playPos - 1];
+
+	float d = float(skipCounter) / skipTarget;
+	float r = last * d + (1.0f - d) * now;
+	unsigned short v = (unsigned short)r;
+
+	//unsigned short v = buffer[playPos];
 	v *= volume;
 	output->write_u16(v);
 
