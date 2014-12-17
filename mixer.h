@@ -21,11 +21,14 @@ namespace mixer {
 	const nat bufferParts = 2;
 
 	// Size of each part.
-	const nat bufferPartSize = 512;
+	const nat bufferPartSize = 1024;
 
     // Length of buffer in bytes.
 	const nat bufferSize = bufferPartSize * bufferParts;
 
     // Stack size for worker thread.
 	const nat stackSize = 1024;
+
+	// Maxium number of playing streams.
+	const nat streams = 5;
 }

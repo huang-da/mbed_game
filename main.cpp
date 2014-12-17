@@ -20,8 +20,10 @@ int main() {
 	}
 
 	// s file = { "/usb/sound.raw", 8000 };
+	s file = { "/usb/h1.raw", 44100 };
+	// s file = { "/usb/h2.raw", 44100 };
 	// s file = { "/usb/s44100.raw", 44100 };
-	s file = { "/usb/s22000.raw", 22000 };
+	// s file = { "/usb/s22000.raw", 22000 };
 	// s file = { "/usb/s11000.raw", 11000 };
 
 	RawFile *f = new RawFile(file.file);
