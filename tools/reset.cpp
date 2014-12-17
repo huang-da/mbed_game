@@ -44,7 +44,7 @@ int main() {
 			Sleep(20);
 
 			cout << "Reset signal sent on " << name << endl;
-			cout << "Echoing data until <return> is pressed." << endl;
+			cout << "Echoing data until <return> is pressed." << endl << endl;
 
 			const nat bufSz = 50;
 			char buffer[bufSz + 1];
