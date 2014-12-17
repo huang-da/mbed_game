@@ -6,21 +6,6 @@
 
 DigitalOut p(LED1);
 
-// void memory() {
-// 	// perform free memory check
-// 	int blockSize = 16;
-// 	int i = 1;
-// 	printf("Checking memory with blocksize %d char ...\n", blockSize);
-// 	while (true) {
-// 		char *p = (char *) malloc(i * blockSize);
-// 		if (p == NULL)
-// 			break;
-// 		free(p);
-// 		++i;
-// 	}
-// 	printf("Ok for %d char\n", (i - 1) * blockSize);
-// }
-
 struct s {
 	const char *file;
 	nat sample;
