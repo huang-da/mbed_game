@@ -1,6 +1,9 @@
 #include <Windows.h>
 #include <iostream>
 #include <conio.h>
+#include <ShlWapi.h>
+
+#pragma comment (lib, "shlwapi.lib")
 
 using namespace std;
 
@@ -13,7 +16,69 @@ char kbchar() {
 		return 0;
 }
 
-int main() {
+const nat progressWidth = 70;
+
+DWORD CALLBACK progress(LARGE_INTEGER total,
+			LARGE_INTEGER transferred,
+			LARGE_INTEGER streamSz,
+			LARGE_INTEGER streamTransferred,
+			DWORD streamNr,
+			DWORD callbackReason,
+			HANDLE src,
+			HANDLE dest,
+			LPVOID data) {
+
+	nat filled = nat((transferred.QuadPart * progressWidth) / total.QuadPart);
+	char progress[progressWidth + 3];
+	progress[0] = '[';
+	progress[progressWidth + 1] = ']';
+	progress[progressWidth + 2] = 0;
+	for (nat i = 0; i < progressWidth; i++)
+		if (i < filled)
+			progress[i + 1] = '=';
+		else if (i > filled)
+			progress[i + 1] = ' ';
+		else
+			progress[i + 1] = '>';
+
+	printf("\r%s", progress);
+
+	return PROGRESS_CONTINUE;
+}
+
+int main(int argc, const char **argv) {
+
+	if (argc == 2) {
+		char from[MAX_PATH];
+		for (nat i = 0; argv[1][i]; i++) {
+			from[i] = argv[1][i];
+			from[i+1] = 0;
+		}
+		for (nat i = 0; from[i]; i++)
+			if (from[i] == '/')
+				from[i] = '\\';
+
+		for (char d = 'a'; d <= 'z'; d++) {
+			char path[] = "?:\\";
+			path[0] = d;
+
+			if (GetDriveType(path) == DRIVE_REMOVABLE) {
+				char check[] = "?:\\MBED.HTM";
+				check[0] = d;
+				if (PathFileExists(check)) {
+					char to[] = "?:\\prog.bin";
+					to[0] = d;
+					printf("Copying to %s\n", to);
+					if (!CopyFileEx(from, to, progress, 0, 0, 0)) {
+						printf("Copy failed! %d\n", GetLastError());
+					}
+					printf("\n");
+				}
+			}
+		}
+	}
+
+	Sleep(1000);
 
 	for (nat i = 1; i < 50; i++) {
 		char name[] = "xx.xCOMNNN";

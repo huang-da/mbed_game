@@ -11,12 +11,12 @@ then
     then
 	echo "No upload."
     else
-	echo "Uploading program..."
-	cp build/$1.bin /f/prog.bin
+    	# echo "Uploading program..."
+	# cp build/$1.bin /f/prog.bin
 
-	sleep 1
+	# sleep 1
 	cd tools
-	mm reset -d 0
+	mm reset -d 0 -a ../build/$1.bin
     fi
 fi
 

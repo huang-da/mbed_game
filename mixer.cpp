@@ -1,4 +1,5 @@
 #include "mixer.h"
+#include <assert.h>
 
 using namespace mixer;
 
@@ -17,25 +18,17 @@ static AnalogOut *output = 0;
 // Current playback position.
 static nat playPos = 0;
 
-// Counters to skip ticks when needed. For example,
-// a samplerate of 44100Hz yields a period of 22us, when it should
-// be 22.67us. To compensate for this, we ignore some ticks.
-// The difference between the actual samplerate and the
-// desired samplerate can be expressed as: z/s, where 1000000 = u * s + z (s is the samplerate).
-// From this we can conclude that we want to skip every n = u / (z/s) samples. To count
-// in whole numbers we can write it like this: n * z = u * s, where n * z can be a counter
-// that is incremented by z each sample and a sample is then skipped whenever the counter
-// is larger than u * s.
-static nat skipCounter = 0;
-static nat skipIncrease = 0;
-static nat skipTarget = 0;
-
+// Buffer used when mixing.
+static ushort mixBuffer[bufferPartSize];
 
 // Current playback volume (0-0x100)
 static nat volume = 0x50;
 
 // Interrupt timer used.
 static Ticker ticker;
+
+// Ticker interval (us).
+static nat tickerInterval;
 
 // Current worker thread (if any).
 static Thread *workerThread = 0;
@@ -59,24 +52,7 @@ static void clearBuffer() {
 
 // Interrupt routine.
 static void interrupt() {
-	skipCounter += skipIncrease;
-	if (skipCounter >= skipTarget) {
-		skipCounter -= skipTarget;
-		return;
-	}
-
-	float now = buffer[playPos];
-	float last;
-	if (playPos == 0)
-		last = buffer[bufferSize - 1];
-	else
-		last = buffer[playPos - 1];
-
-	float d = float(skipCounter) / skipTarget;
-	float r = last * d + (1.0f - d) * now;
-	unsigned short v = (unsigned short)r;
-
-	//unsigned short v = buffer[playPos];
+	unsigned short v = buffer[playPos];
 	v *= volume;
 	output->write_u16(v);
 
@@ -88,61 +64,96 @@ static void interrupt() {
 static void startInterrupt(nat samplerate) {
 	playPos = 0;
 	nat period = 1000000 / samplerate;
+	if (period < 10) {
+		printf("This high samplerate is probably not a good idea!\n");
+		assert(false);
+	}
+	tickerInterval = period;
 	bufferPartTime = period * bufferPartSize / 1000;
-
-	nat remainder = 1000000 - period * samplerate;
-	skipTarget = period * samplerate;
-	skipIncrease = remainder;
-	skipCounter = 0;
-
-	printf("Remainder: %u\n", remainder);
-	printf("Period: %u us\n", period);
-	printf("Skip: +%u, to %u (skip every %f sample)\n", skipIncrease, skipTarget, skipTarget / float(skipIncrease));
+	printf("Sample period: %u us\n", period);
+	printf("Sample frequency: %f Hz\n", 1000000.0 / period);
 	printf("Buffer part time: %u ms\n", bufferPartTime);
 
 	clearBuffer();
 	ticker.attach_us(interrupt, timestamp_t(period));
 }
 
-// Fill a part of the buffer.
-static void fill(nat partOffset, nat size) {
+// Fill the mix buffer with new data.
+static void fillMix() {
+	// clear
+	for (nat i = 0; i < bufferPartSize; i++) {
+		mixBuffer[i] = 0;
+	}
+
 	streamsLock.lock();
 
-	bool any = false;
-
+	nat used = 0;
 	for (nat i = 0; i < streams; i++) {
 		Sound *s = stream[i];
-		if (!s) {
-		} else if (s->finished()) {
+		if (!s)
+			continue;
+
+		used++;
+		if (!s->addResampled(mixBuffer, bufferPartSize)) {
 			stream[i] = 0;
 			delete s;
-			i--;
-		} else {
-			s->data(buffer + partOffset, size);
-			any = true;
 		}
 	}
 
-	if (!any)
-		clearPart(partOffset, size);
-
 	streamsLock.unlock();
+
+	// Normalize.
+	if (used >= 2) {
+		ushort dec = (used - 1) * 0xFF / 2;
+		for (nat i = 0; i < bufferPartSize; i++) {
+			ushort &v = mixBuffer[i];
+
+			if (v > dec)
+				v -= dec;
+			else
+				v = 0;
+
+			if (v > 0xFF)
+				v = 0xFF;
+			//mixBuffer[i] /= used;
+		}
+	}
+
 }
 
-// The thread keeping the buffer filled.
+// Copy the mix buffer into the new place.
+static void fill(nat partOffset) {
+	for (nat i = 0; i < bufferPartSize; i++)
+		buffer[partOffset + i] = byte(mixBuffer[i]);
+}
+
+// The thread keeping the buffer filled. TODO: Use periodic task?
 static void fillThread(void const *p) {
 	nat pos = 0;
+	Timer t;
+	t.start();
+	nat lastTime = t.read_ms();
+	fillMix();
 
 	while (true) {
 		nat play = playPos;
 		if (play < pos || play >= pos + bufferPartSize) {
-			fill(pos, bufferPartSize);
+			lastTime = t.read_ms();
+
+			fill(pos);
 			pos += bufferPartSize;
 			if (pos >= bufferSize)
 				pos -= bufferSize;
+
+			fillMix();
 		}
 
-		Thread::wait(bufferPartTime / 2);
+		int delta = int(lastTime + bufferPartTime) - t.read_ms();
+		if (delta > 10) {
+			Thread::wait(delta - 10);
+		} else {
+			Thread::yield();
+		}
 	}
 }
 
@@ -160,12 +171,17 @@ void stopMixer() {
 }
 
 void play(Sound *sound) {
+	bool added = false;
+	sound->resampleTo(tickerInterval);
 	streamsLock.lock();
 	for (nat i = 0; i < streams; i++) {
 		if (!stream[i]) {
 			stream[i] = sound;
+			added = true;
 			break;
 		}
 	}
 	streamsLock.unlock();
+	if (!added)
+		delete sound;
 }

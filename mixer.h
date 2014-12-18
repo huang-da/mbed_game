@@ -21,7 +21,7 @@ namespace mixer {
 	const nat bufferParts = 2;
 
 	// Size of each part.
-	const nat bufferPartSize = 1024;
+	const nat bufferPartSize = 512;
 
     // Length of buffer in bytes.
 	const nat bufferSize = bufferPartSize * bufferParts;
