@@ -108,7 +108,7 @@ private:
  */
 class WavFile : public Sound {
 public:
-	WavFile(const char *name);
+	WavFile(const char *name, bool repeat = false);
 	~WavFile();
 
 protected:
@@ -118,6 +118,8 @@ private:
 	FILE *fp;
 
 	nat pos, size;
+
+	bool repeat;
 
 	bool loadFile();
 };

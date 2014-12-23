@@ -37,11 +37,12 @@ int main() {
 	// WavFile *f = new WavFile("/usb/h1_2.wav");
 	// WavFile *f = new WavFile("/usb/h2.wav");
 	// WavFile *f = new WavFile("/usb/h2_2.wav");
-	WavFile *f = new WavFile("/usb/staple.wav");
+	// WavFile *f = new WavFile("/usb/staple.wav");
 	// WavFile *f = new WavFile("/usb/s44100.wav");
 	// WavFile *f = new WavFile("/usb/s22000.wav");
 	// WavFile *f = new WavFile("/usb/s11000.wav");
-	// WavFile *f = new WavFile("/usb/sound.wav");
+	WavFile *f = new WavFile("/usb/sound.wav", true);
+	// WavFile *f = new WavFile("/usb/sfx1_3.wav", true);
 	// SquareWave *f = new SquareWave(440);
 
 	// memory();

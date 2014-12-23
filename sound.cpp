@@ -134,10 +134,12 @@ bool RawFile::data(byte *to, nat size) {
 	return true;
 }
 
-WavFile::WavFile(const char *name) {
+WavFile::WavFile(const char *name, bool repeat) {
+	this->repeat = repeat;
+	size = pos = 0;
+
 	fileMutex.lock();
 	fp = fopen(name, "r");
-	size = pos = 0;
 
 	if (!loadFile()) {
 		pos = size;
@@ -163,7 +165,12 @@ bool WavFile::data(byte *to, nat count) {
 	if (r < count) {
 		for (nat i = r; i < count; i++)
 			to[i] = zero;
-		pos = size;
+		if (repeat) {
+			pos = 0;
+			fseek(fp, -((long int)size), SEEK_CUR);
+		} else {
+			pos = size;
+		}
 	} else {
 		pos += r;
 	}
@@ -171,16 +178,16 @@ bool WavFile::data(byte *to, nat count) {
 }
 
 void endian(nat &v) {
-	nat t = (v & 0xFF) << 16;
-	t |= (v & 0xFF00) << 8;
-	t |= (v & 0xFF0000) >> 8;
-	t |= (v & 0xFF000000) >> 16;
+	// nat t = (v & 0xFF) << 16;
+	// t |= (v & 0xFF00) << 8;
+	// t |= (v & 0xFF0000) >> 8;
+	// t |= (v & 0xFF000000) >> 16;
 	// v = t;
 }
 
 void endian(short &v) {
-	short t = (v & 0xFF) << 8;
-	t |= (v & 0xFF00) >> 8;
+	// short t = (v & 0xFF) << 8;
+	// t |= (v & 0xFF00) >> 8;
 	// v = t;
 }
 
