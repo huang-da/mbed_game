@@ -29,6 +29,10 @@ static void cpuMeasure(const void *) {
 	while (true) {
 		nat n = cyclesPerSec();
 
+		nat remPerc = n * 100 / baseline;
+		if (remPerc > 100) remPerc = 0;
+		nat usedPerc = 100 - remPerc;
+
 		nat remaining = n * outputSize / baseline;
 		if (remaining > outputSize) remaining = 0;
 		nat used = outputSize - remaining;
@@ -42,7 +46,7 @@ static void cpuMeasure(const void *) {
 				ascii[i + 1] = ' ';
 		}
 
-		printf("\r%s %10u/%10u", ascii, n, baseline);
+		printf("\r%s %3u%%", ascii, usedPerc);
 		fflush(stdout);
 	}
 }

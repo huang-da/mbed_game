@@ -27,7 +27,7 @@ int main() {
 	// s file = { "/usb/h1.raw", 44100 };
 	// s file = { "/usb/h2.raw", 44100 };
 	// s file = { "/usb/h1_2.raw", 20000 };
-	s file = { "/usb/h2_2.raw", 20000 };
+	// s file = { "/usb/h2_2.raw", 20000 };
 	// s file = { "/usb/s44100.raw", 44100 };
 	// s file = { "/usb/s22000.raw", 22000 };
 	// s file = { "/usb/s11000.raw", 11000 };
@@ -35,7 +35,9 @@ int main() {
 	printf("Creating raw file\n");
 
 	// RawFile *f = new RawFile(file.file, file.sample);
-	WavFile *f = new WavFile("/usb/staple.wav");
+	WavFile *f = new WavFile("/usb/h2_2.wav");
+	// WavFile *f = new WavFile("/usb/staple.wav");
+	// WavFile *f = new WavFile("/usb/sound.wav");
 	// SquareWave *f = new SquareWave(440);
 
 	memory();

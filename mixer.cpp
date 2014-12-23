@@ -17,6 +17,8 @@ static AnalogOut *output = 0;
 
 // Current playback position.
 static nat playPos = 0;
+static nat playPartPos = 0;
+static nat playPartId = 0;
 
 // Buffer used when mixing.
 static ushort mixBuffer[bufferPartSize];
@@ -58,11 +60,19 @@ static void interrupt() {
 
 	if (++playPos >= bufferSize)
 		playPos = 0;
+	if (++playPartPos >= bufferPartSize) {
+		playPartPos = 0;
+		workerThread->signal_set(1 << playPartId);
+		if (++playPartId >= bufferParts)
+			playPartId = 0;
+	}
 }
 
 // Start the interrupt generating sound.
 static void startInterrupt(nat samplerate) {
 	playPos = 0;
+	playPartPos = 0;
+	playPartId = 0;
 	nat period = 1000000 / samplerate;
 	if (period < 10) {
 		printf("This high samplerate is probably not a good idea!\n");
@@ -129,30 +139,11 @@ static void fill(nat partOffset) {
 
 // The thread keeping the buffer filled. TODO: Use Queue or signals from the interrupt() fn.
 static void fillThread(void const *p) {
-	nat pos = 0;
-	Timer t;
-	t.start();
-	nat lastTime = t.read_ms();
-	fillMix();
-
 	while (true) {
-		nat play = playPos;
-		if (play < pos || play >= pos + bufferPartSize) {
-			lastTime = t.read_ms();
-
-			fill(pos);
-			pos += bufferPartSize;
-			if (pos >= bufferSize)
-				pos -= bufferSize;
-
+		for (nat pos = 0; pos < bufferParts; pos++) {
 			fillMix();
-		}
-
-		int delta = int(lastTime + bufferPartTime) - t.read_ms();
-		if (delta > 10) {
-			Thread::wait(delta - 10);
-		} else {
-			Thread::yield();
+			Thread::signal_wait(1 << pos);
+			fill(pos * bufferPartSize);
 		}
 	}
 }
@@ -160,8 +151,8 @@ static void fillThread(void const *p) {
 // Start.
 void startMixer(AnalogOut &out, nat samplerate) {
 	output = &out;
+	workerThread = new Thread(fillThread, 0, osPriorityRealtime, stackSize, stackBuf);
 	startInterrupt(samplerate);
-	workerThread = new Thread(fillThread, 0, osPriorityNormal, stackSize, stackBuf);
 }
 
 // Stop.
