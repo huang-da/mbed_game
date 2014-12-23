@@ -72,3 +72,20 @@ private:
 };
 
 
+/**
+ * Read from a .wav file (currently only supports 8-bit mono).
+ */
+class WavFile : public Sound {
+public:
+	WavFile(const char *name);
+	~WavFile();
+
+	virtual bool data(byte *to);
+
+private:
+	FILE *fp;
+
+	nat pos, size;
+
+	bool loadFile();
+};

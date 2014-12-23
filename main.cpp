@@ -1,4 +1,5 @@
 #include "std.h"
+#include "cpu.h"
 #include "memory.h"
 #include "sound.h"
 #include "mixer.h"
@@ -13,6 +14,8 @@ struct s {
 };
 
 int main() {
+	measureCpu();
+
 	memory();
 
 	USBHostMSD msd("usb");
@@ -31,7 +34,8 @@ int main() {
 
 	printf("Creating raw file\n");
 
-	RawFile *f = new RawFile(file.file, file.sample);
+	// RawFile *f = new RawFile(file.file, file.sample);
+	WavFile *f = new WavFile("/usb/staple.wav");
 	// SquareWave *f = new SquareWave(440);
 
 	memory();
@@ -45,11 +49,17 @@ int main() {
 
 	//output.add(new SquareWave());
 
+	bool last = false;
+	bool now = false;
 	while (true) {
 		p = !p;
 		Thread::wait(400);
-		if (sound) {
-			play(new RawFile("/usb/sfx1_3.raw", 10000));
+
+		last = now;
+		now = sound;
+		if (now && !last) {
+			// play(new WavFile("/usb/sfx1_3.wav"));
+			play(new WavFile("/usb/sound.wav"));
 		}
 	}
 

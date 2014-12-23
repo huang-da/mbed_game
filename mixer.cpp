@@ -127,7 +127,7 @@ static void fill(nat partOffset) {
 		buffer[partOffset + i] = byte(mixBuffer[i]);
 }
 
-// The thread keeping the buffer filled. TODO: Use periodic task?
+// The thread keeping the buffer filled. TODO: Use Queue or signals from the interrupt() fn.
 static void fillThread(void const *p) {
 	nat pos = 0;
 	Timer t;
