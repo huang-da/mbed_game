@@ -1,6 +1,18 @@
 #pragma once
 #include "std.h"
 
+// High quality resampling (uses much CPU), but with noticeable
+// difference for example when resampling from 44100Hz to 45454.54..Hz (22us)
+// There are different levels of the HQ-sound implementation:
+// 1 - best, uses floats to interpolate samples
+// 2 - good, uses fixed-point to interpolate samples. Should be as good as #1, but not as easy to understand.
+// 3 - none, noticeable worse than any other.
+//
+// Approx CPU when playing 1 track at 44100 Hz (upsampled to 22us):
+// 1 : 66%
+// 2 : 57%
+// 3 : 48%
+#define HQ_SOUND 2
 
 /**
  * Base class for anything providing sound.
@@ -10,9 +22,6 @@ public:
 	Sound();
 	virtual ~Sound();
 
-	// Get one sample. Return 'false' if at the end.
-	virtual bool data(byte *to) = 0;
-
 	// The samplefreq (in Hz).
 	nat samplefreq;
 
@@ -21,6 +30,10 @@ public:
 
 	// Get 'n' samples, resampled. Samples are added to 'to'. Returns false if done.
 	bool addResampled(ushort *to, nat count);
+
+protected:
+	// Get one sample. Return 'false' if at the end. (no data is filled then).
+	virtual bool data(byte *to, nat count) = 0;
 
 private:
 	// Resampling data.
@@ -32,6 +45,13 @@ private:
 	nat repeatIncrease;
 	nat repeatTarget;
 
+	// Interpolation variable.
+#if HQ_SOUND == 1
+	float repeatTargetInv;
+#elif HQ_SOUND == 2
+	nat repeatTargetInv;
+#endif
+
 	// Last value (as a float).
 	float last;
 
@@ -40,6 +60,15 @@ private:
 
 	// Get one float. Returns 0xFF/2 if done.
 	ushort next();
+
+	// Buffer size.
+	enum { bufferSize = 32 };
+
+	// Internal data buffer.
+	byte buffer[bufferSize];
+
+	// Position in buffer.
+	nat bufferPos;
 };
 
 /**
@@ -49,7 +78,8 @@ class SquareWave : public Sound {
 public:
 	SquareWave(nat freq, nat length = 0);
 
-	virtual bool data(byte *to);
+protected:
+	virtual bool data(byte *to, nat size);
 
 private:
 	bool pos;
@@ -64,7 +94,8 @@ public:
 	RawFile(const char *name, nat samplefreq);
 	~RawFile();
 
-	virtual bool data(byte *to);
+protected:
+	virtual bool data(byte *to, nat size);
 
 private:
 	FILE *fp;
@@ -80,7 +111,8 @@ public:
 	WavFile(const char *name);
 	~WavFile();
 
-	virtual bool data(byte *to);
+protected:
+	virtual bool data(byte *to, nat size);
 
 private:
 	FILE *fp;

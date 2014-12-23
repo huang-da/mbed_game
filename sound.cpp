@@ -2,8 +2,10 @@
 #include <assert.h>
 
 static const ushort zero = 0xFF/2;
+static const nat largeNat = 0x80000000;
+static const nat largeNatBits = 31;
 
-Sound::Sound() : samplefreq(1), last(zero), done(false) {}
+Sound::Sound() : samplefreq(1), last(zero), done(false), bufferPos(0) {}
 
 Sound::~Sound() {}
 
@@ -21,23 +23,39 @@ void Sound::resampleTo(nat rate) {
 	repeatIncrease = difference;
 	repeatCounter = 0;
 
+#if HQ_SOUND == 1
+	repeatTargetInv = 1.0f / repeatTarget;
+#elif HQ_SOUND == 2
+	repeatTargetInv = largeNat / repeatTarget;
+#endif
+
 	// double repRate = double(repeatIncrease) / repeatTarget;
 	// printf("Resampling %u us (%f Hz) to %u Hz:\n", rate, toFreq, samplefreq);
 	// printf("Repeat when n*%u >= %u (every %f)\n", repeatIncrease, repeatTarget, repRate);
 }
 
 bool Sound::addResampled(ushort *to, nat count) {
-	// float t = 1.0f / repeatTarget;
 	for (nat i = 0; i < count; i++) {
 		if (repeatCounter >= repeatTarget) {
 			to[i] += last;
 			repeatCounter -= repeatTarget;
 		} else {
-			// ushort now = next();
-			// to[i] += ushort(frac*last + (1.0f-frac)*now);
-			// last = now;
-
+#if HQ_SOUND == 1
+			float frac = repeatTargetInv * repeatCounter;
+			ushort now = next();
+			to[i] += ushort(frac*last + (1.0f-frac)*now);
+			last = now;
+#elif HQ_SOUND == 2
+			// ushort frac = (repeatCounter * 0x100) / repeatTarget;
+			// ushort frac = (repeatCounter * repeatTargetInv) / (largeNat / 0x100);
+			ushort frac = (repeatCounter * repeatTargetInv) >> (largeNatBits - 8);
+			ushort now = next();
+			ushort sample = frac*last + (0x100 - frac)*now;
+			to[i] += ushort(sample >> 8);
+			last = now;
+#elif HQ_SOUND == 3
 			to[i] += last = next();
+#endif
 
 			repeatCounter += repeatIncrease;
 		}
@@ -47,16 +65,16 @@ bool Sound::addResampled(ushort *to, nat count) {
 }
 
 ushort Sound::next() {
-	if (done)
-		return zero;
-
-	byte out;
-	if (!data(&out)) {
-		done = true;
-		return zero;
+	if (bufferPos >= bufferSize) {
+		if (done || !data(buffer, bufferSize)) {
+			for (nat i = 0; i < bufferSize; i++)
+				buffer[i] = zero;
+			done = true;
+		}
+		bufferPos = 0;
 	}
 
-	return out;
+	return buffer[bufferPos++];
 }
 
 
@@ -64,13 +82,25 @@ SquareWave::SquareWave(nat freq, nat length) : pos(false), length(length) {
 	samplefreq = freq * 2;
 }
 
-bool SquareWave::data(byte *to) {
-	*to = pos ? 0xFF : 0x00;
-	pos = !pos;
-
-	if (length == 0)
+bool SquareWave::data(byte *to, nat size) {
+	if (length == 0) {
+		for (nat i = 0; i < size; i++) {
+			to[i] = pos ? 0xFF : 0x00;
+			pos = !pos;
+		}
 		return true;
-	return --length > 0;
+	} else {
+		for (nat i = 0; i < size; i++) {
+			if (length > 0) {
+				length--;
+				to[i] = pos ? 0xFF : 0x00;
+				pos = !pos;
+			} else {
+				to[i] = zero;
+			}
+		}
+		return length == 0;
+	}
 }
 
 static Mutex fileMutex;
@@ -89,14 +119,18 @@ RawFile::~RawFile() {
 	fileMutex.unlock();
 }
 
-bool RawFile::data(byte *to) {
+bool RawFile::data(byte *to, nat size) {
 	if (eof)
 		return false;
 
 	fileMutex.lock();
-	nat pos = fread(to, sizeof(*to), 1, fp);
+	nat r = fread(to, sizeof(*to), size, fp);
 	fileMutex.unlock();
-	eof = pos == 0;
+	if (r != size) {
+		eof = true;
+		for (nat i = r; i < size; i++)
+			to[i] = zero;
+	}
 	return true;
 }
 
@@ -118,14 +152,21 @@ WavFile::~WavFile() {
 	fileMutex.unlock();
 }
 
-bool WavFile::data(byte *to) {
+bool WavFile::data(byte *to, nat count) {
 	if (pos == size)
 		return false;
 
 	fileMutex.lock();
-	fread(to, sizeof(*to), 1, fp);
+	nat r = fread(to, sizeof(*to), count, fp);
 	fileMutex.unlock();
-	pos++;
+
+	if (r < count) {
+		for (nat i = r; i < count; i++)
+			to[i] = zero;
+		pos = size;
+	} else {
+		pos += r;
+	}
 	return true;
 }
 
