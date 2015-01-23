@@ -1,8 +1,10 @@
 #include "mbed.h"
 #include "C12832.h"
 #include "Timer.h"
-#include <deque>
+// #include <deque>
 #include "std.h"
+#include "queue.h"
+//#include "memory.h"
 #include "sound.h"
 #include "mixer.h"
 #include "USBHostMSD.h"
@@ -17,7 +19,7 @@ struct s {
 
  struct Point {
     int x, y;
-    Point(int x, int y) : x(x), y(y) {}
+    Point(int x = -1, int y = -1) : x(x), y(y) {}
  };
 
 
@@ -88,38 +90,63 @@ void food() {
     food_y = rand()%ROWS * 4;
 }
 
+#define SIZE(a) (sizeof(a) / sizeof(*a))
+
+const char *bgms[] = {
+	"/usb/smg2.wav",
+	"/usb/smg2-2.wav",
+	"/usb/smg2-3.wav",
+	"/usb/smg-gg.wav",
+	"/usb/staple.wav",
+};
+
+const char *randomBgm() {
+	nat id = rand() % SIZE(bgms);
+	return bgms[id];
+}
 
 C12832 lcd(p5, p7, p6, p8, p11);
- 
+SQueue<Point, 60> queue;
+
 int main()
 {
     /*
         Sound section
     */
     USBHostMSD msd("usb");
-    while (!msd.connect()) {
+	for (nat i = 0; i < 10 && !msd.connect(); i++) {
         Thread::wait(500);
     }
-    WavFile *f = new WavFile("/usb/smg2.wav", true);
-    AnalogOut out(p18);
-    startMixer(out, f->samplefreq);
-    play(f);
+	bool connected = msd.connect();
+
+	AnalogOut out(p18);
+	WavFile *sfx = 0;
+	startMixer(out, 20000);
 
     /*
         Game section
     */
     while (true) {
+		WavFile *bgm = 0;
+		if (connected) {
+			bgm = new WavFile(randomBgm(), true);
+			play(bgm);
+		}
+
+
         Timer timer;
         timer.start();
         int loopTime = timer.read_ms();
-
+		queue.clear();
         lcd.cls();
         lcd.locate(0,3);
-        std::deque<Point> queue;
+        // std::deque<Point> queue;
+        positionX = 64;
+        positionY = 16;
         lcd.fillrect(positionX, positionY, positionX + 11, positionY + 3, 1);
-        queue.push_back(Point(64, 16));
-        queue.push_back(Point(68, 16));
-        queue.push_back(Point(72, 16));
+        queue.push_front(Point(72, 16));
+        queue.push_front(Point(68, 16));
+        queue.push_front(Point(64, 16));
         int xpos = 0;
         int ypos = 0;
         food();
@@ -127,27 +154,26 @@ int main()
         lcd.fillrect(food_x, food_y, food_x, food_y + 3, 1);
         lcd.fillrect(food_x + 3, food_y, food_x + 3, food_y + 3, 1);
         lcd.fillrect(food_x, food_y + 3, food_x + 3, food_y + 3, 1);
-        positionX = 64;
-        positionY = 16;
         snake_direction = LEFT;
         bool intersect = false;
 
-        while(true) { 
-            if (fire) {
-                leds=0xf;
-            } else {
-                leds=joy;
-            }
-            lcd.locate(0,15);
+        while(true) {
             if (timer.read_ms() - loopTime > 300) {
                 moveSnake();
-                std::deque<Point>::iterator it = queue.begin();
-                while (it != queue.end()) {
-                    if(it->x == positionX && it->y == positionY) {
+
+				for (nat i = 0; i < queue.size(); i++) {
+					Point it = queue.at(i);
+                    if(it.x == positionX && it.y == positionY) {
                         intersect = true;
                     }
-                    it++;
-                }
+				}
+                // std::deque<Point>::iterator it = queue.begin();
+                // while (it != queue.end()) {
+                //     if(it->x == positionX && it->y == positionY) {
+                //         intersect = true;
+                //     }
+                //     it++;
+                // }
                 if(positionX > 128 || positionX < 0 || positionY > 32 || positionY < 0 || intersect == true) {
                     break;
                 }
@@ -158,11 +184,14 @@ int main()
                     lcd.fillrect(food_x, food_y, food_x, food_y + 3, 1);
                     lcd.fillrect(food_x + 3, food_y, food_x + 3, food_y + 3, 1);
                     lcd.fillrect(food_x, food_y + 3, food_x + 3, food_y + 3, 1);
+
+					if (!playing(sfx) && connected)
+						play(sfx = new WavFile("/usb/sfx1_3.wav"));
                 }
                 else {
-                    xpos = queue.back().x;
-                    ypos = queue.back().y;
-                    queue.pop_back();
+					Point pt = queue.pop_back();
+                    xpos = pt.x;
+                    ypos = pt.y;
                     lcd.fillrect(positionX, positionY, positionX + 3, positionY + 3, 1);
                     if(!(xpos == food_x && ypos == food_y))
                         lcd.fillrect(xpos, ypos, xpos + 3, ypos + 3, 0);
@@ -178,11 +207,25 @@ int main()
         lcd.printf("You lost");
         lcd.locate(30,20);
         lcd.printf("Snake Length: %d", queue.size());
+
+		while (playing(sfx))
+			Thread::wait(100);
+
+		WavFile *win = 0;
+		if (connected) {
+			win = new WavFile("/usb/gameover.wav");
+			stop(bgm);
+			play(win);
+		}
         while(true){
+			Thread::wait(100);
             if(joy) {
                 break;
             }
         }
+		if (connected) {
+			stop(win);
+		}
     }
 }
  

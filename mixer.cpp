@@ -37,6 +37,7 @@ static Thread *workerThread = 0;
 
 // Streams currently playing.
 static Sound *stream[streams];
+static bool paused[streams] = { false };
 
 // Lock for the 'streams' above.
 static Mutex streamsLock;
@@ -99,6 +100,9 @@ static void fillMix() {
 
 	nat used = 0;
 	for (nat i = 0; i < streams; i++) {
+		if (paused[i])
+			continue;
+
 		Sound *s = stream[i];
 		if (!s)
 			continue;
@@ -168,6 +172,7 @@ void play(Sound *sound) {
 	for (nat i = 0; i < streams; i++) {
 		if (!stream[i]) {
 			stream[i] = sound;
+			paused[i] = false;
 			added = true;
 			break;
 		}
@@ -175,4 +180,30 @@ void play(Sound *sound) {
 	streamsLock.unlock();
 	if (!added)
 		delete sound;
+}
+
+void stop(Sound *sound) {
+	streamsLock.lock();
+	for (nat i = 0; i < streams; i++) {
+		if (stream[i] == sound)
+			stream[i] = 0;
+	}
+	streamsLock.unlock();
+	delete sound;
+}
+
+bool playing(Sound *sound) {
+	if (sound == 0)
+		return false;
+	for (nat i = 0; i < streams; i++)
+		if (stream[i] == sound)
+			return true;
+	return false;
+}
+
+void pause(Sound *sound, bool pause) {
+	for (nat i = 0; i < streams; i++) {
+		if (stream[i] == sound)
+			paused[i] = pause;
+	}
 }

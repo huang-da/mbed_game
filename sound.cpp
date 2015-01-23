@@ -134,7 +134,7 @@ bool RawFile::data(byte *to, nat size) {
 	return true;
 }
 
-WavFile::WavFile(const char *name, bool repeat) {
+WavFile::WavFile(const char *name, bool repeat) : name(name) {
 	this->repeat = repeat;
 	size = pos = 0;
 

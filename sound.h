@@ -115,6 +115,7 @@ protected:
 	virtual bool data(byte *to, nat size);
 
 private:
+	const char *name;
 	FILE *fp;
 
 	nat pos, size;

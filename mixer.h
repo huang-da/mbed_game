@@ -11,6 +11,14 @@ void stopMixer();
 // Play 'sound' until it is finished.
 void play(Sound *sound);
 
+// Is 'sound' playing.
+bool playing(Sound *sound);
+
+// Stop 'sound'.
+void stop(Sound *sound);
+
+// Mute 'sound'.
+void pause(Sound *sound, bool pause);
 
 /**
  * Configuration.
