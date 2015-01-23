@@ -2,7 +2,18 @@
 #include "C12832.h"
 #include "Timer.h"
 #include <deque>
+#include "std.h"
+#include "sound.h"
+#include "mixer.h"
+#include "USBHostMSD.h"
 
+DigitalOut p(LED1);
+DigitalIn sound(p14);
+
+struct s {
+    const char *file;
+    nat sample;
+};
 
  struct Point {
     int x, y;
@@ -82,6 +93,21 @@ C12832 lcd(p5, p7, p6, p8, p11);
  
 int main()
 {
+    /*
+        Sound section
+    */
+    USBHostMSD msd("usb");
+    while (!msd.connect()) {
+        Thread::wait(500);
+    }
+    WavFile *f = new WavFile("/usb/smg2.wav", true);
+    AnalogOut out(p18);
+    startMixer(out, f->samplefreq);
+    play(f);
+
+    /*
+        Game section
+    */
     while (true) {
         Timer timer;
         timer.start();
