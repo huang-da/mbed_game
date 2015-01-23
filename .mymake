@@ -24,7 +24,7 @@ intermediate=o
 #ignore=*.template.*
 
 #Include paths:
-include=./mbed,./mbed/target,./mbed-rtos/rtos,./mbed-rtos/rtx,./FatFileSystem,./FatFileSystem/ChaN,./USBHost/USBHost,./USBHost/USBHostHub,./USBHost/USBHostMSD
+include=./mbed,./mbed/target,./mbed-rtos/rtos,./mbed-rtos/rtx,./FATFileSystem,./FATFileSystem/ChaN,./USBHost/USBHost,./USBHost/USBHostHub,./USBHost/USBHostMSD
 
 #Include paths command line to compiler
 includeCl=-iquote 
@@ -52,7 +52,7 @@ compile=s:arm-none-eabi-as -mcpu=cortex-m3 -mthumb -o <output> <file>
 #<files> is the list of intermediate files and
 #<output> is the name of the final executable to be created.
 #<libs> is the list of library includes generated.
-link=arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -T./mbed/target/LPC1768.ld -L./mbed/target <files> ./mbed/target/cmsis_nvic.o ./mbed/target/system_LPC17xx.o ./mbed/target/board.o ./mbed/target/retarget.o ./mbed/target/startup_LPC17xx.o <libs> -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys -o build/elf && ..\gcc\bin\arm-none-eabi-objcopy -O binary build/elf <output>
+link=arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -T./mbed/target/LPC1768.ld -L./mbed/target <files> ./mbed/target/cmsis_nvic.o ./mbed/target/system_LPC17xx.o ./mbed/target/board.o ./mbed/target/retarget.o ./mbed/target/startup_LPC17xx.o <libs> -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys -o build/elf && arm-none-eabi-objcopy -O binary build/elf <output>
 
 #The directory to be used for intermediate files
 build=build\
