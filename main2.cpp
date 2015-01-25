@@ -158,7 +158,7 @@ int main()
         bool intersect = false;
 
         while(true) {
-            if (timer.read_ms() - loopTime > 200) {
+            if (timer.read_ms() - loopTime > 100) {
                 moveSnake();
 
 				for (nat i = 0; i < queue.size(); i++) {
