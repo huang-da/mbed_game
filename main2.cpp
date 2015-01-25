@@ -158,7 +158,7 @@ int main()
         bool intersect = false;
 
         while(true) {
-            if (timer.read_ms() - loopTime > 300) {
+            if (timer.read_ms() - loopTime > 200) {
                 moveSnake();
 
 				for (nat i = 0; i < queue.size(); i++) {
@@ -180,6 +180,7 @@ int main()
                 if(food_x == positionX && food_y == positionY){
                     food();
                     lcd.fillrect(positionX, positionY, positionX + 3, positionY + 3, 1);
+                    lcd.fillrect(food_x, food_y, food_x + 3, food_y + 3, 0);
                     lcd.fillrect(food_x, food_y, food_x + 3, food_y, 1);
                     lcd.fillrect(food_x, food_y, food_x, food_y + 3, 1);
                     lcd.fillrect(food_x + 3, food_y, food_x + 3, food_y + 3, 1);
