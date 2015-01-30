@@ -160,7 +160,6 @@ bool WavFile::data(byte *to, nat count) {
 
 	fileMutex.lock();
 	nat r = fread(to, sizeof(*to), count, fp);
-	fileMutex.unlock();
 
 	if (r < count) {
 		for (nat i = r; i < count; i++)
@@ -174,6 +173,8 @@ bool WavFile::data(byte *to, nat count) {
 	} else {
 		pos += r;
 	}
+
+	fileMutex.unlock();
 	return true;
 }
 

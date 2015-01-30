@@ -195,13 +195,17 @@ void play(Sound *sound) {
 }
 
 void stop(Sound *sound) {
+	bool found = false;
 	streamsLock.lock();
 	for (nat i = 0; i < streams; i++) {
-		if (stream[i] == sound)
+		if (stream[i] == sound) {
+			found = true;
 			stream[i] = 0;
+		}
 	}
 	streamsLock.unlock();
-	delete sound;
+	if (found)
+		delete sound;
 }
 
 bool playing(Sound *sound) {

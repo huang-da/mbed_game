@@ -29,7 +29,7 @@ void pause(Sound *sound, bool pause);
 namespace mixer {
 	// Number of parts in the buffer. The part
 	// being played is locked, and can not be updated.
-	const nat bufferParts = 2;
+	const nat bufferParts = 3;
 
 	// Size of each part.
 	const nat bufferPartSize = 256;

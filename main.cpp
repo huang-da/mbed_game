@@ -14,7 +14,7 @@ struct s {
 };
 
 int main() {
-	measureCpu();
+	// measureCpu();
 
 	// memory();
 
@@ -41,7 +41,7 @@ int main() {
 	// WavFile *f = new WavFile("/usb/s44100.wav");
 	// WavFile *f = new WavFile("/usb/s22000.wav");
 	// WavFile *f = new WavFile("/usb/s11000.wav");
-	//WavFile *f = new WavFile("/usb/sound.wav", true);
+	// WavFile *f = new WavFile("/usb/sound.wav", true);
 	// WavFile *f = new WavFile("/usb/sfx1_3.wav", true);
 	// SquareWave *f = new SquareWave(440);
 

@@ -160,7 +160,7 @@ int main()
         bool intersect = false;
 
         while(true) {
-            if (timer.read_ms() - loopTime > 100) {
+            if (timer.read_ms() - loopTime > 150) {
                 moveSnake();
 
 				for (nat i = 0; i < queue.size(); i++) {
@@ -204,6 +204,8 @@ int main()
 
             }
             checkButtons();
+			// Let the sound do some work as well!
+			Thread::wait(10);
         }
         lcd.cls();
         lcd.locate(45,6);
