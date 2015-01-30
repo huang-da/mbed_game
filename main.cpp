@@ -48,7 +48,9 @@ int main() {
 	WavFile *f = new WavFile("/usb/smg2.wav", true);
 	// memory();
 
+	AnalogIn vol(p19);
 	AnalogOut out(p18);
+	setVolume(vol);
 	startMixer(out, f->samplefreq);
 	printf("Created output\n");
 	play(f);

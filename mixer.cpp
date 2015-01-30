@@ -15,6 +15,9 @@ static byte stackBuf[stackSize];
 // Output used.
 static AnalogOut *output = 0;
 
+// Volume input.
+static AnalogIn *vol = 0;
+
 // Current playback position.
 static nat playPos = 0;
 static nat playPartPos = 0;
@@ -24,7 +27,7 @@ static nat playPartId = 0;
 static ushort mixBuffer[bufferPartSize];
 
 // Current playback volume (0-0x100)
-static nat volume = 0x50;
+static nat volume = 0x100;
 
 // Interrupt timer used.
 static Ticker ticker;
@@ -141,13 +144,17 @@ static void fill(nat partOffset) {
 		buffer[partOffset + i] = byte(mixBuffer[i]);
 }
 
-// The thread keeping the buffer filled. TODO: Use Queue or signals from the interrupt() fn.
+// The thread keeping the buffer filled.
 static void fillThread(void const *p) {
 	while (true) {
 		for (nat pos = 0; pos < bufferParts; pos++) {
 			fillMix();
 			Thread::signal_wait(1 << pos);
 			fill(pos * bufferPartSize);
+
+			// Update volume.
+			if (vol)
+				volume = vol->read_u16() >> 8;
 		}
 	}
 }
@@ -157,6 +164,11 @@ void startMixer(AnalogOut &out, nat samplerate) {
 	output = &out;
 	workerThread = new Thread(fillThread, 0, osPriorityRealtime, stackSize, stackBuf);
 	startInterrupt(samplerate);
+}
+
+// Set volume.
+void setVolume(AnalogIn &v) {
+	vol = &v;
 }
 
 // Stop.

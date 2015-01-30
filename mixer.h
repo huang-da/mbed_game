@@ -5,6 +5,9 @@
 // Start playback.
 void startMixer(AnalogOut &output, nat samplerate);
 
+// Set volume control.
+void setVolume(AnalogIn &input);
+
 // Stop playback.
 void stopMixer();
 

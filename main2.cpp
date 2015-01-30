@@ -26,7 +26,7 @@ struct s {
 // #define SQUARE_SIZE 3
 #define COLUMNS 32
 #define ROWS 8
- 
+
 BusIn joy(p15,p12,p13,p16);
 DigitalIn fire(p14);
 
@@ -34,7 +34,7 @@ BusOut leds(LED1,LED2,LED3,LED4);
 
 char width = 128;
 char height = 32;
- 
+
 char LEFT = 0;
 char RIGHT = 1;
 char UP = 2;
@@ -50,16 +50,16 @@ char food_x, food_y;
 void checkButtons() {
     if( joy == 4 ) {
         if (snake_direction != RIGHT) {
-            snake_direction = LEFT; 
+            snake_direction = LEFT;
             return;
         }
     }
     if( joy == 8 ) {
         if (snake_direction != LEFT) {
-            snake_direction = RIGHT; 
+            snake_direction = RIGHT;
             return;
         }
-    }    
+    }
     if( joy == 1 ) {
         if (snake_direction != DOWN) {
             snake_direction = UP;
@@ -120,6 +120,8 @@ int main()
 	bool connected = msd.connect();
 
 	AnalogOut out(p18);
+	AnalogIn vol(p19);
+	setVolume(vol);
 	WavFile *sfx = 0;
 	startMixer(out, 20000);
 
